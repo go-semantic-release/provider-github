@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -22,8 +23,23 @@ type GitHubRepository struct {
 
 func (repo *GitHubRepository) Init(config map[string]string) error {
 	gheHost := config["githubEnterpriseHost"]
+	if gheHost == "" {
+		gheHost = os.Getenv("GITHUB_ENTERPRISE_HOST")
+	}
 	slug := config["slug"]
+	if slug == "" {
+		slug = os.Getenv("GITHUB_REPOSITORY")
+	}
 	token := config["token"]
+	if token == "" {
+		token = os.Getenv("GITHUB_TOKEN")
+	}
+	if token == "" {
+		token = os.Getenv("GH_TOKEN")
+	}
+	if token == "" {
+		return errors.New("github token missing")
+	}
 	if !strings.Contains(slug, "/") {
 		return errors.New("invalid slug")
 	}

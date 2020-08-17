@@ -20,7 +20,7 @@ func TestNewGithubRepository(t *testing.T) {
 	var repo *GitHubRepository
 	repo = &GitHubRepository{}
 	err := repo.Init(map[string]string{})
-	require.EqualError(err, "invalid slug")
+	require.EqualError(err, "github token missing")
 
 	repo = &GitHubRepository{}
 	err = repo.Init(map[string]string{
