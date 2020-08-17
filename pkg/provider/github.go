@@ -22,7 +22,7 @@ type GitHubRepository struct {
 }
 
 func (repo *GitHubRepository) Init(config map[string]string) error {
-	gheHost := config["githubEnterpriseHost"]
+	gheHost := config["github_enterprise_host"]
 	if gheHost == "" {
 		gheHost = os.Getenv("GITHUB_ENTERPRISE_HOST")
 	}
