@@ -15,6 +15,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var PVERSION = "dev"
+
 type GitHubRepository struct {
 	owner  string
 	repo   string
@@ -156,4 +158,8 @@ func (repo *GitHubRepository) CreateRelease(release *provider.CreateReleaseConfi
 
 func (repo *GitHubRepository) Name() string {
 	return "GitHub"
+}
+
+func (repo *GitHubRepository) Version() string {
+	return PVERSION
 }
