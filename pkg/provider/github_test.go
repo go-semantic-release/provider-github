@@ -163,7 +163,7 @@ func TestGithubGetCommits(t *testing.T) {
 	defer ts.Close()
 	commits, err := repo.GetCommits("2222", "1111")
 	require.NoError(t, err)
-	require.Len(t, commits, 6)
+	require.Len(t, commits, 5)
 
 	for i, c := range commits {
 		idxOff := i + 1
