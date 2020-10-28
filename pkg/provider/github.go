@@ -89,14 +89,14 @@ func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCo
 		}
 		for _, commit := range commits {
 			sha := commit.GetSHA()
-			allCommits = append(allCommits, &semrel.RawCommit{
-				SHA:        sha,
-				RawMessage: commit.Commit.GetMessage(),
-			})
 			if sha == fromSha {
 				done = true
 				break
 			}
+			allCommits = append(allCommits, &semrel.RawCommit{
+				SHA:        sha,
+				RawMessage: commit.Commit.GetMessage(),
+			})
 		}
 		if done || resp.NextPage == 0 {
 			break
