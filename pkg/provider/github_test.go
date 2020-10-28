@@ -64,10 +64,14 @@ var (
 		Name: &GITHUB_REPO_NAME,
 	}
 	GITHUB_COMMITS = []*github.RepositoryCommit{
+		createGithubCommit("abcd", "feat(app): new new feature"),
+		createGithubCommit("1111", "feat: to"),
 		createGithubCommit("abcd", "feat(app): new feature"),
 		createGithubCommit("dcba", "Fix: bug"),
 		createGithubCommit("cdba", "Initial commit"),
 		createGithubCommit("efcd", "chore: break\nBREAKING CHANGE: breaks everything"),
+		createGithubCommit("2222", "feat: from"),
+		createGithubCommit("beef", "fix: test"),
 	}
 	GITHUB_TAGS = []*github.Reference{
 		createGithubRef("refs/tags/test-tag", "deadbeef"),
@@ -91,7 +95,15 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/commits" {
-		json.NewEncoder(w).Encode(GITHUB_COMMITS)
+		toSha := r.URL.Query().Get("sha")
+		skip := 0
+		for i, commit := range GITHUB_COMMITS {
+			if commit.GetSHA() == toSha {
+				skip = i
+				break
+			}
+		}
+		json.NewEncoder(w).Encode(GITHUB_COMMITS[skip:])
 		return
 	}
 	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/git/matching-refs/tags" {
@@ -149,13 +161,14 @@ func TestGithubGetInfo(t *testing.T) {
 func TestGithubGetCommits(t *testing.T) {
 	repo, ts := getNewGithubTestRepo(t)
 	defer ts.Close()
-	commits, err := repo.GetCommits("")
+	commits, err := repo.GetCommits("2222", "1111")
 	require.NoError(t, err)
-	require.Len(t, commits, 4)
+	require.Len(t, commits, 6)
 
 	for i, c := range commits {
-		require.Equal(t, c.SHA, GITHUB_COMMITS[i].GetSHA())
-		require.Equal(t, c.RawMessage, GITHUB_COMMITS[i].Commit.GetMessage())
+		idxOff := i + 1
+		require.Equal(t, c.SHA, GITHUB_COMMITS[idxOff].GetSHA())
+		require.Equal(t, c.RawMessage, GITHUB_COMMITS[idxOff].Commit.GetMessage())
 	}
 }
 

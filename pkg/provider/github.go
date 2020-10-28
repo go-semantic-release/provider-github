@@ -75,23 +75,36 @@ func (repo *GitHubRepository) GetInfo() (*provider.RepositoryInfo, error) {
 	}, nil
 }
 
-func (repo *GitHubRepository) GetCommits(sha string) ([]*semrel.RawCommit, error) {
+func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCommit, error) {
+	allCommits := make([]*semrel.RawCommit, 0)
 	opts := &github.CommitsListOptions{
-		SHA:         sha,
+		SHA:         toSha,
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
-	commits, _, err := repo.client.Repositories.ListCommits(context.Background(), repo.owner, repo.repo, opts)
-	if err != nil {
-		return nil, err
-	}
-	ret := make([]*semrel.RawCommit, len(commits))
-	for i, commit := range commits {
-		ret[i] = &semrel.RawCommit{
-			SHA:        commit.GetSHA(),
-			RawMessage: commit.Commit.GetMessage(),
+	done := false
+	for {
+		commits, resp, err := repo.client.Repositories.ListCommits(context.Background(), repo.owner, repo.repo, opts)
+		if err != nil {
+			return nil, err
 		}
+		for _, commit := range commits {
+			sha := commit.GetSHA()
+			allCommits = append(allCommits, &semrel.RawCommit{
+				SHA:        sha,
+				RawMessage: commit.Commit.GetMessage(),
+			})
+			if sha == fromSha {
+				done = true
+				break
+			}
+		}
+		if done || resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
-	return ret, nil
+
+	return allCommits, nil
 }
 
 func (repo *GitHubRepository) GetReleases(rawRe string) ([]*semrel.Release, error) {
