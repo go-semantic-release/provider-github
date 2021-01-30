@@ -124,14 +124,27 @@ func (repo *GitHubRepository) GetReleases(rawRe string) ([]*semrel.Release, erro
 			if rawRe != "" && !re.MatchString(tag) {
 				continue
 			}
-			if r.Object.GetType() != "commit" {
+			objType := r.Object.GetType()
+			if objType != "commit" && objType != "tag" {
 				continue
+			}
+			foundSha := r.Object.GetSHA()
+			// resolve annotated tag
+			if objType == "tag" {
+				resTag, _, err := repo.client.Git.GetTag(context.Background(), repo.owner, repo.repo, foundSha)
+				if err != nil {
+					continue
+				}
+				if resTag.Object.GetType() != "commit" {
+					continue
+				}
+				foundSha = resTag.Object.GetSHA()
 			}
 			version, err := semver.NewVersion(tag)
 			if err != nil {
 				continue
 			}
-			allReleases = append(allReleases, &semrel.Release{SHA: r.Object.GetSHA(), Version: version.String()})
+			allReleases = append(allReleases, &semrel.Release{SHA: foundSha, Version: version.String()})
 		}
 		if resp.NextPage == 0 {
 			break

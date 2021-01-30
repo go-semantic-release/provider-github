@@ -45,9 +45,14 @@ func createGithubCommit(sha, message string) *github.RepositoryCommit {
 }
 
 var commitType = "commit"
+var tagType = "tag"
 
 func createGithubRef(ref, sha string) *github.Reference {
 	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &sha, Type: &commitType}}
+}
+
+func createGithubRefWithTag(ref, sha string) *github.Reference {
+	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &sha, Type: &tagType}}
 }
 
 var (
@@ -81,6 +86,7 @@ var (
 		createGithubRef("refs/tags/v3.0.0-beta.2", "deadbeef"),
 		createGithubRef("refs/tags/v3.0.0-beta.1", "deadbeef"),
 		createGithubRef("refs/tags/2020.04.19", "deadbeef"),
+		createGithubRefWithTag("refs/tags/v1.1.1", "12345678"),
 	}
 )
 
@@ -130,6 +136,13 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Fprint(w, "{}")
+		return
+	}
+	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/git/tags/12345678" {
+		sha := "deadbeef"
+		json.NewEncoder(w).Encode(github.Tag{
+			Object: &github.GitObject{SHA: &sha, Type: &commitType},
+		})
 		return
 	}
 	http.Error(w, "invalid route", http.StatusNotImplemented)
