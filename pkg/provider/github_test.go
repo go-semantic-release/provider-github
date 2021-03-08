@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
@@ -100,8 +101,11 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(GITHUB_REPO)
 		return
 	}
-	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/commits" {
-		toSha := r.URL.Query().Get("sha")
+	if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/repos/owner/test-repo/compare/") {
+
+		li := strings.LastIndex(r.URL.Path, "/")
+		arr := strings.Split(r.URL.Path[li+1:], "...")
+		toSha := arr[1]
 		skip := 0
 		for i, commit := range GITHUB_COMMITS {
 			if commit.GetSHA() == toSha {
@@ -109,7 +113,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		json.NewEncoder(w).Encode(GITHUB_COMMITS[skip:])
+		json.NewEncoder(w).Encode(github.CommitsComparison{Commits: GITHUB_COMMITS[skip:]})
 		return
 	}
 	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/git/matching-refs/tags" {
