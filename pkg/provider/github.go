@@ -81,15 +81,13 @@ func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCo
 		SHA:         toSha,
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
-
 	done := false
 	for {
-		commits, resp, err := repo.client.Repositories.CompareCommits(context.Background(), repo.owner, repo.repo, fromSha, toSha)
+		commits, resp, err := repo.client.Repositories.ListCommits(context.Background(), repo.owner, repo.repo, opts)
 		if err != nil {
 			return nil, err
 		}
-
-		for _, commit := range commits.Commits {
+		for _, commit := range commits {
 			sha := commit.GetSHA()
 			if sha == fromSha {
 				done = true
