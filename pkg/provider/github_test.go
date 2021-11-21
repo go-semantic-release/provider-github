@@ -104,15 +104,18 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/repos/owner/test-repo/compare/") {
 		li := strings.LastIndex(r.URL.Path, "/")
 		shaRange := strings.Split(r.URL.Path[li+1:], "...")
+		fromSha := shaRange[0]
 		toSha := shaRange[1]
-		skip := 0
+		start := 0
+		end := 0
 		for i, commit := range GITHUB_COMMITS {
 			if commit.GetSHA() == toSha {
-				skip = i
-				break
+				start = i
+			} else if commit.GetSHA() == fromSha {
+				end = i
 			}
 		}
-		json.NewEncoder(w).Encode(github.CommitsComparison{Commits: GITHUB_COMMITS[skip:]})
+		json.NewEncoder(w).Encode(github.CommitsComparison{Commits: GITHUB_COMMITS[start:end]})
 		return
 	}
 	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/commits" {

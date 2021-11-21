@@ -83,8 +83,8 @@ func (repo *GitHubRepository) GetInfo() (*provider.RepositoryInfo, error) {
 	}, nil
 }
 
-func (repo *GitHubRepository) getCommitsFromGithub(fromSha, toSha string, opts *github.ListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
-	if !repo.compareCommits {
+func (repo *GitHubRepository) getCommitsFromGithub(compareCommits bool, fromSha, toSha string, opts *github.ListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
+	if !compareCommits {
 		return repo.client.Repositories.ListCommits(context.Background(), repo.owner, repo.repo, &github.CommitsListOptions{
 			SHA:         toSha,
 			ListOptions: *opts,
@@ -98,17 +98,23 @@ func (repo *GitHubRepository) getCommitsFromGithub(fromSha, toSha string, opts *
 }
 
 func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCommit, error) {
+	compareCommits := repo.compareCommits
+	if compareCommits && fromSha == "" {
+		// we want all commits for the first release, hence disable compareCommits
+		compareCommits = false
+	}
 	allCommits := make([]*semrel.RawCommit, 0)
 	opts := &github.ListOptions{PerPage: 100}
 	done := false
 	for {
-		commits, resp, err := repo.getCommitsFromGithub(fromSha, toSha, opts)
+		commits, resp, err := repo.getCommitsFromGithub(compareCommits, fromSha, toSha, opts)
 		if err != nil {
 			return nil, err
 		}
 		for _, commit := range commits {
 			sha := commit.GetSHA()
-			if sha == fromSha {
+			// compare commits already returns the relevant commits and no extra filtering is needed
+			if !compareCommits && sha == fromSha {
 				done = true
 				break
 			}
@@ -122,7 +128,6 @@ func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCo
 		}
 		opts.Page = resp.NextPage
 	}
-
 	return allCommits, nil
 }
 
