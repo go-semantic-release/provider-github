@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
@@ -100,6 +101,20 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(GITHUB_REPO)
 		return
 	}
+	if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/repos/owner/test-repo/compare/") {
+		li := strings.LastIndex(r.URL.Path, "/")
+		shaRange := strings.Split(r.URL.Path[li+1:], "...")
+		toSha := shaRange[1]
+		skip := 0
+		for i, commit := range GITHUB_COMMITS {
+			if commit.GetSHA() == toSha {
+				skip = i
+				break
+			}
+		}
+		json.NewEncoder(w).Encode(github.CommitsComparison{Commits: GITHUB_COMMITS[skip:]})
+		return
+	}
 	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/commits" {
 		toSha := r.URL.Query().Get("sha")
 		skip := 0
@@ -174,6 +189,21 @@ func TestGithubGetInfo(t *testing.T) {
 func TestGithubGetCommits(t *testing.T) {
 	repo, ts := getNewGithubTestRepo(t)
 	defer ts.Close()
+	commits, err := repo.GetCommits("2222", "1111")
+	require.NoError(t, err)
+	require.Len(t, commits, 5)
+
+	for i, c := range commits {
+		idxOff := i + 1
+		require.Equal(t, c.SHA, GITHUB_COMMITS[idxOff].GetSHA())
+		require.Equal(t, c.RawMessage, GITHUB_COMMITS[idxOff].Commit.GetMessage())
+	}
+}
+
+func TestGithubGetCommitsWithCompare(t *testing.T) {
+	repo, ts := getNewGithubTestRepo(t)
+	defer ts.Close()
+	repo.compareCommits = true
 	commits, err := repo.GetCommits("2222", "1111")
 	require.NoError(t, err)
 	require.Len(t, commits, 5)

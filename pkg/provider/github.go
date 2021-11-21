@@ -18,9 +18,10 @@ import (
 var PVERSION = "dev"
 
 type GitHubRepository struct {
-	owner  string
-	repo   string
-	client *github.Client
+	owner          string
+	repo           string
+	client         *github.Client
+	compareCommits bool
 }
 
 func (repo *GitHubRepository) Init(config map[string]string) error {
@@ -42,12 +43,14 @@ func (repo *GitHubRepository) Init(config map[string]string) error {
 	if token == "" {
 		return errors.New("github token missing")
 	}
+
 	if !strings.Contains(slug, "/") {
 		return errors.New("invalid slug")
 	}
 	split := strings.Split(slug, "/")
 	repo.owner = split[0]
 	repo.repo = split[1]
+
 	oauthClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
 	if gheHost != "" {
 		gheUrl := fmt.Sprintf("https://%s/api/v3/", gheHost)
@@ -59,6 +62,11 @@ func (repo *GitHubRepository) Init(config map[string]string) error {
 	} else {
 		repo.client = github.NewClient(oauthClient)
 	}
+
+	if config["github_use_compare_commits"] == "true" {
+		repo.compareCommits = true
+	}
+
 	return nil
 }
 
@@ -75,15 +83,26 @@ func (repo *GitHubRepository) GetInfo() (*provider.RepositoryInfo, error) {
 	}, nil
 }
 
+func (repo *GitHubRepository) getCommitsFromGithub(fromSha, toSha string, opts *github.ListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
+	if !repo.compareCommits {
+		return repo.client.Repositories.ListCommits(context.Background(), repo.owner, repo.repo, &github.CommitsListOptions{
+			SHA:         toSha,
+			ListOptions: *opts,
+		})
+	}
+	compCommits, resp, err := repo.client.Repositories.CompareCommits(context.Background(), repo.owner, repo.repo, fromSha, toSha, opts)
+	if err != nil {
+		return nil, nil, err
+	}
+	return compCommits.Commits, resp, nil
+}
+
 func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCommit, error) {
 	allCommits := make([]*semrel.RawCommit, 0)
-	opts := &github.CommitsListOptions{
-		SHA:         toSha,
-		ListOptions: github.ListOptions{PerPage: 100},
-	}
+	opts := &github.ListOptions{PerPage: 100}
 	done := false
 	for {
-		commits, resp, err := repo.client.Repositories.ListCommits(context.Background(), repo.owner, repo.repo, opts)
+		commits, resp, err := repo.getCommitsFromGithub(fromSha, toSha, opts)
 		if err != nil {
 			return nil, err
 		}
