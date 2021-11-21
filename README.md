@@ -5,6 +5,15 @@
 
 The GitHub provider for [go-semantic-release](https://github.com/go-semantic-release/semantic-release).
 
+### Provider Option
+
+The provider options can be configured via the `--provider-opt` CLI flag.
+
+| Name | Description | Example |
+|---|---|---|
+| github_enterprise_host | This configures the provider to use a GitHub Enterprise host endpoint | `--provider-opt github_enterprise_host=github.mycorp.com` |
+| github_use_compare_commits | This enables the [compare commits API](https://docs.github.com/en/rest/reference/repos#compare-two-commits) for fetching the commits  | `--provider-opt github_use_compare_commits=true` |
+
 ## Licence
 
 The [MIT License (MIT)](http://opensource.org/licenses/MIT)
