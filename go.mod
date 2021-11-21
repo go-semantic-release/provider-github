@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Masterminds/semver/v3 v3.1.0
 	github.com/go-semantic-release/semantic-release/v2 v2.12.1
-	github.com/google/go-github/v32 v32.1.0
+	github.com/google/go-github/v40 v40.0.0
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 )
@@ -15,7 +15,7 @@ require (
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v0.15.0 // indirect
 	github.com/hashicorp/go-plugin v1.4.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -36,11 +36,11 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20201112155050-0c6587e931a9 // indirect
-	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
-	golang.org/x/sys v0.0.0-20201113135734-0a15ea8d9b02 // indirect
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
+	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	golang.org/x/text v0.3.3 // indirect
-	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	google.golang.org/grpc v1.33.2 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect

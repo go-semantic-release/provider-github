@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/semrel"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v40/github"
 	"github.com/stretchr/testify/require"
 )
 
