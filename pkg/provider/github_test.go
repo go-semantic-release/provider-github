@@ -50,7 +50,8 @@ var (
 	tagType    = "tag"
 )
 
-func createGithubRef(ref, sha string) *github.Reference {
+func createGithubRef(ref string) *github.Reference {
+	sha := "deadbeef"
 	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &sha, Type: &commitType}}
 }
 
@@ -82,13 +83,13 @@ var (
 		createGithubCommit("beef", "fix: test"),
 	}
 	githubTags = []*github.Reference{
-		createGithubRef("refs/tags/test-tag", "deadbeef"),
-		createGithubRef("refs/tags/v1.0.0", "beefdead"),
-		createGithubRef("refs/tags/v2.0.0", "deadbeef"),
-		createGithubRef("refs/tags/v2.1.0-beta", "beefdead"),
-		createGithubRef("refs/tags/v3.0.0-beta.2", "deadbeef"),
-		createGithubRef("refs/tags/v3.0.0-beta.1", "beefdead"),
-		createGithubRef("refs/tags/2020.04.19", "deadbeef"),
+		createGithubRef("refs/tags/test-tag"),
+		createGithubRef("refs/tags/v1.0.0"),
+		createGithubRef("refs/tags/v2.0.0"),
+		createGithubRef("refs/tags/v2.1.0-beta"),
+		createGithubRef("refs/tags/v3.0.0-beta.2"),
+		createGithubRef("refs/tags/v3.0.0-beta.1"),
+		createGithubRef("refs/tags/2020.04.19"),
 		createGithubRefWithTag("refs/tags/v1.1.1", "12345678"),
 	}
 )
