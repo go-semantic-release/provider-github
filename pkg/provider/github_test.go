@@ -45,8 +45,10 @@ func createGithubCommit(sha, message string) *github.RepositoryCommit {
 	return &github.RepositoryCommit{SHA: &sha, Commit: &github.Commit{Message: &message}}
 }
 
-var commitType = "commit"
-var tagType = "tag"
+var (
+	commitType = "commit"
+	tagType    = "tag"
+)
 
 func createGithubRef(ref, sha string) *github.Reference {
 	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &sha, Type: &commitType}}
@@ -57,19 +59,19 @@ func createGithubRefWithTag(ref, sha string) *github.Reference {
 }
 
 var (
-	GITHUB_REPO_PRIVATE  = true
-	GITHUB_DEFAULTBRANCH = "master"
-	GITHUB_REPO_NAME     = "test-repo"
-	GITHUB_OWNER_LOGIN   = "owner"
-	GITHUB_REPO          = github.Repository{
-		DefaultBranch: &GITHUB_DEFAULTBRANCH,
-		Private:       &GITHUB_REPO_PRIVATE,
+	githubRepoPrivate   = true
+	githubDefaultBranch = "master"
+	githubRepoName      = "test-repo"
+	githubOwnerLogin    = "owner"
+	githubRepo          = github.Repository{
+		DefaultBranch: &githubDefaultBranch,
+		Private:       &githubRepoPrivate,
 		Owner: &github.User{
-			Login: &GITHUB_OWNER_LOGIN,
+			Login: &githubOwnerLogin,
 		},
-		Name: &GITHUB_REPO_NAME,
+		Name: &githubRepoName,
 	}
-	GITHUB_COMMITS = []*github.RepositoryCommit{
+	githubCommits = []*github.RepositoryCommit{
 		createGithubCommit("abcd", "feat(app): new new feature"),
 		createGithubCommit("1111", "feat: to"),
 		createGithubCommit("abcd", "feat(app): new feature"),
@@ -79,62 +81,64 @@ var (
 		createGithubCommit("2222", "feat: from"),
 		createGithubCommit("beef", "fix: test"),
 	}
-	GITHUB_TAGS = []*github.Reference{
+	githubTags = []*github.Reference{
 		createGithubRef("refs/tags/test-tag", "deadbeef"),
-		createGithubRef("refs/tags/v1.0.0", "deadbeef"),
+		createGithubRef("refs/tags/v1.0.0", "beefdead"),
 		createGithubRef("refs/tags/v2.0.0", "deadbeef"),
-		createGithubRef("refs/tags/v2.1.0-beta", "deadbeef"),
+		createGithubRef("refs/tags/v2.1.0-beta", "beefdead"),
 		createGithubRef("refs/tags/v3.0.0-beta.2", "deadbeef"),
-		createGithubRef("refs/tags/v3.0.0-beta.1", "deadbeef"),
+		createGithubRef("refs/tags/v3.0.0-beta.1", "beefdead"),
 		createGithubRef("refs/tags/2020.04.19", "deadbeef"),
 		createGithubRefWithTag("refs/tags/v1.1.1", "12345678"),
 	}
 )
 
 //nolint:errcheck
+//gocyclo:ignore
 func githubHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Authorization") != "Bearer token" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo" {
-		json.NewEncoder(w).Encode(GITHUB_REPO)
+	if r.Method == http.MethodGet && r.URL.Path == "/repos/owner/test-repo" {
+		json.NewEncoder(w).Encode(githubRepo)
 		return
 	}
-	if r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/repos/owner/test-repo/compare/") {
+
+	if r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/repos/owner/test-repo/compare/") {
 		li := strings.LastIndex(r.URL.Path, "/")
 		shaRange := strings.Split(r.URL.Path[li+1:], "...")
 		fromSha := shaRange[0]
 		toSha := shaRange[1]
 		start := 0
 		end := 0
-		for i, commit := range GITHUB_COMMITS {
+		for i, commit := range githubCommits {
 			if commit.GetSHA() == toSha {
 				start = i
 			} else if commit.GetSHA() == fromSha {
 				end = i
 			}
 		}
-		json.NewEncoder(w).Encode(github.CommitsComparison{Commits: GITHUB_COMMITS[start:end]})
+		json.NewEncoder(w).Encode(github.CommitsComparison{Commits: githubCommits[start:end]})
 		return
 	}
-	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/commits" {
+	if r.Method == http.MethodGet && r.URL.Path == "/repos/owner/test-repo/commits" {
 		toSha := r.URL.Query().Get("sha")
 		skip := 0
-		for i, commit := range GITHUB_COMMITS {
+		for i, commit := range githubCommits {
 			if commit.GetSHA() == toSha {
 				skip = i
 				break
 			}
 		}
-		json.NewEncoder(w).Encode(GITHUB_COMMITS[skip:])
+		json.NewEncoder(w).Encode(githubCommits[skip:])
 		return
 	}
-	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/git/matching-refs/tags" {
-		json.NewEncoder(w).Encode(GITHUB_TAGS)
+	if r.Method == http.MethodGet && r.URL.Path == "/repos/owner/test-repo/git/matching-refs/tags" {
+		json.NewEncoder(w).Encode(githubTags)
 		return
 	}
-	if r.Method == "POST" && r.URL.Path == "/repos/owner/test-repo/git/refs" {
+	if r.Method == http.MethodPost && r.URL.Path == "/repos/owner/test-repo/git/refs" {
 		var data map[string]string
 		json.NewDecoder(r.Body).Decode(&data)
 		r.Body.Close()
@@ -145,7 +149,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "{}")
 		return
 	}
-	if r.Method == "POST" && r.URL.Path == "/repos/owner/test-repo/releases" {
+	if r.Method == http.MethodPost && r.URL.Path == "/repos/owner/test-repo/releases" {
 		var data map[string]string
 		json.NewDecoder(r.Body).Decode(&data)
 		r.Body.Close()
@@ -156,7 +160,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "{}")
 		return
 	}
-	if r.Method == "GET" && r.URL.Path == "/repos/owner/test-repo/git/tags/12345678" {
+	if r.Method == http.MethodGet && r.URL.Path == "/repos/owner/test-repo/git/tags/12345678" {
 		sha := "deadbeef"
 		json.NewEncoder(w).Encode(github.Tag{
 			Object: &github.GitObject{SHA: &sha, Type: &commitType},
@@ -183,9 +187,9 @@ func TestGithubGetInfo(t *testing.T) {
 	defer ts.Close()
 	repoInfo, err := repo.GetInfo()
 	require.NoError(t, err)
-	require.Equal(t, GITHUB_DEFAULTBRANCH, repoInfo.DefaultBranch)
-	require.Equal(t, GITHUB_OWNER_LOGIN, repoInfo.Owner)
-	require.Equal(t, GITHUB_REPO_NAME, repoInfo.Repo)
+	require.Equal(t, githubDefaultBranch, repoInfo.DefaultBranch)
+	require.Equal(t, githubOwnerLogin, repoInfo.Owner)
+	require.Equal(t, githubRepoName, repoInfo.Repo)
 	require.True(t, repoInfo.Private)
 }
 
@@ -198,8 +202,8 @@ func TestGithubGetCommits(t *testing.T) {
 
 	for i, c := range commits {
 		idxOff := i + 1
-		require.Equal(t, c.SHA, GITHUB_COMMITS[idxOff].GetSHA())
-		require.Equal(t, c.RawMessage, GITHUB_COMMITS[idxOff].Commit.GetMessage())
+		require.Equal(t, c.SHA, githubCommits[idxOff].GetSHA())
+		require.Equal(t, c.RawMessage, githubCommits[idxOff].Commit.GetMessage())
 	}
 }
 
@@ -213,8 +217,8 @@ func TestGithubGetCommitsWithCompare(t *testing.T) {
 
 	for i, c := range commits {
 		idxOff := i + 1
-		require.Equal(t, c.SHA, GITHUB_COMMITS[idxOff].GetSHA())
-		require.Equal(t, c.RawMessage, GITHUB_COMMITS[idxOff].Commit.GetMessage())
+		require.Equal(t, c.SHA, githubCommits[idxOff].GetSHA())
+		require.Equal(t, c.RawMessage, githubCommits[idxOff].Commit.GetMessage())
 	}
 }
 

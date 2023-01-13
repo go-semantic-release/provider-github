@@ -53,8 +53,8 @@ func (repo *GitHubRepository) Init(config map[string]string) error {
 
 	oauthClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
 	if gheHost != "" {
-		gheUrl := fmt.Sprintf("https://%s/api/v3/", gheHost)
-		rClient, err := github.NewEnterpriseClient(gheUrl, gheUrl, oauthClient)
+		gheURL := fmt.Sprintf("https://%s/api/v3/", gheHost)
+		rClient, err := github.NewEnterpriseClient(gheURL, gheURL, oauthClient)
 		if err != nil {
 			return err
 		}
@@ -131,6 +131,7 @@ func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCo
 	return allCommits, nil
 }
 
+//gocyclo:ignore
 func (repo *GitHubRepository) GetReleases(rawRe string) ([]*semrel.Release, error) {
 	re := regexp.MustCompile(rawRe)
 	allReleases := make([]*semrel.Release, 0)
