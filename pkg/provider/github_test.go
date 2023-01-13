@@ -50,9 +50,10 @@ var (
 	tagType    = "tag"
 )
 
+var testSHA = "deadbeef"
+
 func createGithubRef(ref string) *github.Reference {
-	sha := "deadbeef"
-	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &sha, Type: &commitType}}
+	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &testSHA, Type: &commitType}}
 }
 
 func createGithubRefWithTag(ref, sha string) *github.Reference {
@@ -143,7 +144,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		var data map[string]string
 		json.NewDecoder(r.Body).Decode(&data)
 		r.Body.Close()
-		if data["sha"] != "deadbeef" || data["ref"] != "refs/tags/v2.0.0" {
+		if data["sha"] != testSHA || data["ref"] != "refs/tags/v2.0.0" {
 			http.Error(w, "invalid sha or ref", http.StatusBadRequest)
 			return
 		}
@@ -162,7 +163,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodGet && r.URL.Path == "/repos/owner/test-repo/git/tags/12345678" {
-		sha := "deadbeef"
+		sha := testSHA
 		json.NewEncoder(w).Encode(github.Tag{
 			Object: &github.GitObject{SHA: &sha, Type: &commitType},
 		})
@@ -233,11 +234,11 @@ func TestGithubGetReleases(t *testing.T) {
 		expectedSHA     string
 		expectedVersion string
 	}{
-		{"", "", "deadbeef", "2020.4.19"},
-		{"", "^v[0-9]*", "deadbeef", "2.0.0"},
-		{"2-beta", "", "deadbeef", "2.1.0-beta"},
-		{"3-beta", "", "deadbeef", "3.0.0-beta.2"},
-		{"4-beta", "", "deadbeef", "4.0.0-beta"},
+		{"", "", testSHA, "2020.4.19"},
+		{"", "^v[0-9]*", testSHA, "2.0.0"},
+		{"2-beta", "", testSHA, "2.1.0-beta"},
+		{"3-beta", "", testSHA, "3.0.0-beta.2"},
+		{"4-beta", "", testSHA, "4.0.0-beta"},
 	}
 
 	for _, tc := range testCases {
@@ -255,6 +256,6 @@ func TestGithubGetReleases(t *testing.T) {
 func TestGithubCreateRelease(t *testing.T) {
 	repo, ts := getNewGithubTestRepo(t)
 	defer ts.Close()
-	err := repo.CreateRelease(&provider.CreateReleaseConfig{NewVersion: "2.0.0", SHA: "deadbeef"})
+	err := repo.CreateRelease(&provider.CreateReleaseConfig{NewVersion: "2.0.0", SHA: testSHA})
 	require.NoError(t, err)
 }
