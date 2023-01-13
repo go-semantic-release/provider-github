@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/Masterminds/semver/v3 v3.2.0
 	github.com/go-semantic-release/semantic-release/v2 v2.25.0
-	github.com/google/go-github/v44 v44.1.0
+	github.com/google/go-github/v49 v49.1.1-0.20230111123143-ced4abd274f3
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/oauth2 v0.4.0
 )

@@ -11,7 +11,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/semrel"
-	"github.com/google/go-github/v44/github"
+	"github.com/google/go-github/v49/github"
 	"golang.org/x/oauth2"
 )
 
