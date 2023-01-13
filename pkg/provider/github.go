@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
@@ -121,6 +122,16 @@ func (repo *GitHubRepository) GetCommits(fromSha, toSha string) ([]*semrel.RawCo
 			allCommits = append(allCommits, &semrel.RawCommit{
 				SHA:        sha,
 				RawMessage: commit.Commit.GetMessage(),
+				Annotations: map[string]string{
+					"author_login":    commit.GetAuthor().GetLogin(),
+					"author_name":     commit.Commit.GetAuthor().GetName(),
+					"author_email":    commit.Commit.GetAuthor().GetEmail(),
+					"author_date":     commit.Commit.GetAuthor().GetDate().Format(time.RFC3339),
+					"committer_login": commit.GetCommitter().GetLogin(),
+					"committer_name":  commit.Commit.GetCommitter().GetName(),
+					"committer_email": commit.Commit.GetCommitter().GetEmail(),
+					"committer_date":  commit.Commit.GetCommitter().GetDate().Format(time.RFC3339),
+				},
 			})
 		}
 		if done || resp.NextPage == 0 {

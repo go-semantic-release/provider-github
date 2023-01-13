@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/semrel"
@@ -41,16 +42,31 @@ func TestNewGithubRepository(t *testing.T) {
 	require.Equal("github.enterprise", repo.client.BaseURL.Host)
 }
 
-func createGithubCommit(sha, message string) *github.RepositoryCommit {
-	return &github.RepositoryCommit{SHA: &sha, Commit: &github.Commit{Message: &message}}
-}
-
 var (
 	commitType = "commit"
 	tagType    = "tag"
+	testSHA    = "deadbeef"
+
+	githubAuthorLogin = "author-login"
+	githubAuthorName  = "author"
+	githubAuthorEmail = "author@github.com"
+	githubTimestamp   = time.Now()
+
+	githubAuthor = &github.CommitAuthor{
+		Name:  &githubAuthorName,
+		Email: &githubAuthorEmail,
+		Date:  &githubTimestamp,
+	}
 )
 
-var testSHA = "deadbeef"
+func createGithubCommit(sha, message string) *github.RepositoryCommit {
+	return &github.RepositoryCommit{
+		SHA:       &sha,
+		Commit:    &github.Commit{Message: &message, Author: githubAuthor, Committer: githubAuthor},
+		Author:    &github.User{Login: &githubAuthorLogin},
+		Committer: &github.User{Login: &githubAuthorLogin},
+	}
+}
 
 func createGithubRef(ref string) *github.Reference {
 	return &github.Reference{Ref: &ref, Object: &github.GitObject{SHA: &testSHA, Type: &commitType}}
@@ -206,6 +222,14 @@ func TestGithubGetCommits(t *testing.T) {
 		idxOff := i + 1
 		require.Equal(t, c.SHA, githubCommits[idxOff].GetSHA())
 		require.Equal(t, c.RawMessage, githubCommits[idxOff].Commit.GetMessage())
+		require.Equal(t, c.Annotations["author_login"], githubCommits[idxOff].GetAuthor().GetLogin())
+		require.Equal(t, c.Annotations["author_name"], githubCommits[idxOff].Commit.GetAuthor().GetName())
+		require.Equal(t, c.Annotations["author_email"], githubCommits[idxOff].Commit.GetAuthor().GetEmail())
+		require.Equal(t, c.Annotations["committer_login"], githubCommits[idxOff].GetCommitter().GetLogin())
+		require.Equal(t, c.Annotations["committer_name"], githubCommits[idxOff].Commit.GetCommitter().GetName())
+		require.Equal(t, c.Annotations["committer_email"], githubCommits[idxOff].Commit.GetCommitter().GetEmail())
+		require.Equal(t, c.Annotations["author_date"], githubCommits[idxOff].Commit.GetAuthor().GetDate().Format(time.RFC3339))
+		require.Equal(t, c.Annotations["committer_date"], githubCommits[idxOff].Commit.GetCommitter().GetDate().Format(time.RFC3339))
 	}
 }
 
