@@ -13,6 +13,8 @@ The provider options can be configured via the `--provider-opt` CLI flag.
 |---|---|---|
 | github_enterprise_host | This configures the provider to use a GitHub Enterprise host endpoint | `--provider-opt github_enterprise_host=github.mycorp.com` |
 | github_use_compare_commits | This enables the [compare commits API](https://docs.github.com/en/rest/reference/repos#compare-two-commits) for fetching the commits  | `--provider-opt github_use_compare_commits=true` |
+| slug | The owner and repository name  | `--provider-opt slug=go-semantic-release/provider-github` |
+| token | GitHub token  | `--provider-opt token=xx` |
 
 ## Licence
 
