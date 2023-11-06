@@ -16,6 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var validTags = map[string]bool{
+	"v2.0.0": true,
+	"2.0.0":  true,
+}
+
 func TestNewGithubRepository(t *testing.T) {
 	require := require.New(t)
 
@@ -37,6 +42,7 @@ func TestNewGithubRepository(t *testing.T) {
 		"github_enterprise_host": "github.enterprise",
 		"slug":                   "owner/test-repo",
 		"token":                  "token",
+		"strip_v_tag_prefix":     "true",
 	})
 	require.NoError(err)
 	require.Equal("github.enterprise", repo.client.BaseURL.Host)
@@ -160,7 +166,7 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		var data map[string]string
 		json.NewDecoder(r.Body).Decode(&data)
 		r.Body.Close()
-		if data["sha"] != testSHA || data["ref"] != "refs/tags/v2.0.0" {
+		if data["sha"] != testSHA || (data["ref"] != "refs/tags/v2.0.0" && data["ref"] != "refs/tags/2.0.0") {
 			http.Error(w, "invalid sha or ref", http.StatusBadRequest)
 			return
 		}
@@ -171,10 +177,12 @@ func githubHandler(w http.ResponseWriter, r *http.Request) {
 		var data map[string]string
 		json.NewDecoder(r.Body).Decode(&data)
 		r.Body.Close()
-		if data["tag_name"] != "v2.0.0" {
+
+		if _, ok := validTags[data["tag_name"]]; !ok {
 			http.Error(w, "invalid tag name", http.StatusBadRequest)
 			return
 		}
+
 		fmt.Fprint(w, "{}")
 		return
 	}
@@ -281,5 +289,22 @@ func TestGithubCreateRelease(t *testing.T) {
 	repo, ts := getNewGithubTestRepo(t)
 	defer ts.Close()
 	err := repo.CreateRelease(&provider.CreateReleaseConfig{NewVersion: "2.0.0", SHA: testSHA})
+	require.NoError(t, err)
+}
+
+func TestGitHubStripVTagRelease(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(githubHandler))
+	defer ts.Close()
+
+	repo := &GitHubRepository{}
+	err := repo.Init(map[string]string{
+		"slug":               "owner/test-repo",
+		"token":              "token",
+		"strip_v_tag_prefix": "true",
+	})
+	require.NoError(t, err)
+	repo.client.BaseURL, _ = url.Parse(ts.URL + "/")
+
+	err = repo.CreateRelease(&provider.CreateReleaseConfig{NewVersion: "2.0.0", SHA: testSHA})
 	require.NoError(t, err)
 }
