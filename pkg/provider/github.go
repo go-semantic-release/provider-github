@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,10 +20,11 @@ import (
 var PVERSION = "dev"
 
 type GitHubRepository struct {
-	owner          string
-	repo           string
-	client         *github.Client
-	compareCommits bool
+	owner           string
+	repo            string
+	stripVTagPrefix bool
+	client          *github.Client
+	compareCommits  bool
 }
 
 func (repo *GitHubRepository) Init(config map[string]string) error {
@@ -66,6 +68,14 @@ func (repo *GitHubRepository) Init(config map[string]string) error {
 
 	if config["github_use_compare_commits"] == "true" {
 		repo.compareCommits = true
+	}
+
+	var err error
+	stripVTagPrefix := config["strip_v_tag_prefix"]
+	repo.stripVTagPrefix, err = strconv.ParseBool(stripVTagPrefix)
+
+	if stripVTagPrefix != "" && err != nil {
+		return fmt.Errorf("failed to set property strip_v_tag_prefix: %w", err)
 	}
 
 	return nil
@@ -192,7 +202,12 @@ func (repo *GitHubRepository) GetReleases(rawRe string) ([]*semrel.Release, erro
 }
 
 func (repo *GitHubRepository) CreateRelease(release *provider.CreateReleaseConfig) error {
-	tag := fmt.Sprintf("v%s", release.NewVersion)
+	prefix := "v"
+	if repo.stripVTagPrefix {
+		prefix = ""
+	}
+
+	tag := prefix + release.NewVersion
 	isPrerelease := release.Prerelease || semver.MustParse(release.NewVersion).Prerelease() != ""
 
 	if release.Branch != release.SHA {
