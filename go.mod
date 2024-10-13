@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
 	github.com/go-semantic-release/semantic-release/v2 v2.31.0
-	github.com/google/go-github/v49 v49.1.1-0.20230111123143-ced4abd274f3
+	github.com/google/go-github/v66 v66.0.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/oauth2 v0.23.0
 )
@@ -39,7 +39,6 @@ require (
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect

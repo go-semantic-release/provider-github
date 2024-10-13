@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/semrel"
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v66/github"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,7 +56,7 @@ var (
 	githubAuthorLogin = "author-login"
 	githubAuthorName  = "author"
 	githubAuthorEmail = "author@github.com"
-	githubTimestamp   = time.Now()
+	githubTimestamp   = github.Timestamp{Time: time.Now()}
 
 	githubAuthor = &github.CommitAuthor{
 		Name:  &githubAuthorName,

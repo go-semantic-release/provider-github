@@ -13,7 +13,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/provider"
 	"github.com/go-semantic-release/semantic-release/v2/pkg/semrel"
-	"github.com/google/go-github/v49/github"
+	"github.com/google/go-github/v66/github"
 	"golang.org/x/oauth2"
 )
 
@@ -57,7 +57,7 @@ func (repo *GitHubRepository) Init(config map[string]string) error {
 	oauthClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
 	if gheHost != "" {
 		gheURL := fmt.Sprintf("https://%s/api/v3/", gheHost)
-		rClient, err := github.NewEnterpriseClient(gheURL, gheURL, oauthClient)
+		rClient, err := github.NewClient(oauthClient).WithEnterpriseURLs(gheURL, gheURL)
 		if err != nil {
 			return err
 		}
